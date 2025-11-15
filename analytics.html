@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANALYTICS - CYBER GEO PLATFORM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
+            background: #000000;
+            color: #00ff00;
+            line-height: 1.6;
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .cyber-nav {
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+            border-bottom: 1px solid #00ff00;
+            padding: 1rem 2rem;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .cyber-panel {
+            background: rgba(0, 20, 0, 0.8);
+            border: 1px solid #00ff00;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .cyber-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .panel-header {
+            color: #00ff00;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            height: 200px;
+            background: #001100;
+            border: 1px solid #00ff00;
+            position: relative;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .chart {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .cyber-button {
+            background: transparent;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 0.7rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .cyber-button:hover {
+            background: rgba(0, 255, 0, 0.1);
+        }
+
+        .cyber-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 20, 0, 0.9);
+            border-top: 1px solid #00ff00;
+            padding: 0.5rem 2rem;
+        }
+
+        .footer-nav {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .footer-btn {
+            width: auto;
+            margin: 0;
+        }
+
+        .footer-btn.active {
+            background: rgba(0, 255, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrixCanvas" class="matrix-bg"></canvas>
+
+    <nav class="cyber-nav">
+        <div style="text-align: center; font-size: 1.5rem; font-weight: bold;">
+            ADVANCED ANALYTICS DASHBOARD
+        </div>
+    </nav>
+
+    <div class="analytics-grid">
+        <div class="cyber-panel">
+            <div class="panel-header">GEOPOLITICAL TRENDS</div>
+            <div class="chart-container">
+                <div class="chart" id="trendChart" style="height: 0%"></div>
+            </div>
+            <div style="text-align: center;">TREND ANALYSIS: <span id="trendStatus">CALCULATING</span></div>
+        </div>
+
+        <div class="cyber-panel">
+            <div class="panel-header">RISK ASSESSMENT</div>
+            <div class="chart-container">
+                <div class="chart" id="riskChart" style="height: 0%"></div>
+            </div>
+            <div style="text-align: center;">RISK LEVEL: <span id="riskStatus">LOW</span></div>
+        </div>
+
+        <div class="cyber-panel">
+            <div class="panel-header">ECONOMIC FORECAST</div>
+            <div class="chart-container">
+                <div class="chart" id="economicChart" style="height: 0%"></div>
+            </div>
+            <div style="text-align: center;">GROWTH PROJECTION: <span id="growthStatus">STABLE</span></div>
+        </div>
+
+        <div class="cyber-panel">
+            <div class="panel-header">SECURITY INDEX</div>
+            <div class="chart-container">
+                <div class="chart" id="securityChart" style="height: 0%"></div>
+            </div>
+            <div style="text-align: center;">SECURITY LEVEL: <span id="securityStatus">HIGH</span></div>
+        </div>
+    </div>
+
+    <div class="cyber-footer">
+        <div class="footer-nav">
+            <button class="cyber-button footer-btn" onclick="window.location.href='index.html'">DASHBOARD</button>
+            <button class="cyber-button footer-btn active">ANALYTICS</button>
+            <button class="cyber-button footer-btn" onclick="window.location.href='threat-map.html'">THREAT MAP</button>
+        </div>
+    </div>
+
+    <script>
+        // تهيئة الرسوم البيانية
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            startChartAnimations();
+        });
+
+        function initializeCharts() {
+            startMatrixEffect();
+        }
+
+        function startChartAnimations() {
+            animateChart('trendChart', 65, 'TREND ANALYSIS: COMPLETE');
+            animateChart('riskChart', 35, 'RISK LEVEL: MEDIUM');
+            animateChart('economicChart', 75, 'GROWTH PROJECTION: POSITIVE');
+            animateChart('securityChart', 80, 'SECURITY LEVEL: HIGH');
+        }
+
+        function animateChart(chartId, targetHeight, statusText) {
+            const chart = document.getElementById(chartId);
+            const statusElement = document.getElementById(chartId.replace('Chart', 'Status'));
+            let height = 0;
+            
+            const interval = setInterval(() => {
+                height += 2;
+                if (height >= targetHeight) {
+                    height = targetHeight;
+                    clearInterval(interval);
+                    statusElement.textContent = statusText;
+                }
+                chart.style.height = height + '%';
+            }, 50);
+        }
+
+        function startMatrixEffect() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            const charArray = chars.split("");
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+            
+            for(let i = 0; i < columns; i++) {
+                drops[i] = 1;
+            }
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#00ff00';
+                ctx.font = fontSize + 'px monospace';
+                
+                for(let i = 0; i < drops.length; i++) {
+                    const text = charArray[Math.floor(Math.random() * charArray.length)];
+                    const x = i * fontSize;
+                    const y = drops[i] * fontSize;
+                    
+                    ctx.fillText(text, x, y);
+                    
+                    if(y > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    
+                    drops[i]++;
+                }
+            }
+            
+            setInterval(draw, 50);
+        }
+
+        window.addEventListener('resize', function() {
+            const canvas = document.getElementById('matrixCanvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLOBAL THREAT MAP - CYBER GEO PLATFORM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
+            background: #000000;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.2;
+        }
+
+        .cyber-nav {
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 0, 0.2), transparent);
+            border-bottom: 2px solid #ff0000;
+            padding: 1rem 2rem;
+            position: relative;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px #ff0000;
+            color: #ff0000;
+        }
+
+        .map-container {
+            width: 100%;
+            height: calc(100vh - 80px);
+            position: relative;
+            background: #001100;
+            overflow: hidden;
+        }
+
+        .world-map {
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 255, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 0, 0, 0.1) 0%, transparent 50%);
+            position: relative;
+        }
+
+        .threat-point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        .threat-point:hover {
+            transform: translate(-50%, -50%) scale(1.5);
+            z-index: 10;
+        }
+
+        .threat-point.low {
+            background: #00ff00;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .threat-point.medium {
+            background: #ffff00;
+            box-shadow: 0 0 15px #ffff00;
+        }
+
+        .threat-point.high {
+            background: #ff0000;
+            box-shadow: 0 0 20px #ff0000;
+        }
+
+        .threat-info {
+            position: absolute;
+            background: rgba(0, 15, 0, 0.95);
+            border: 2px solid;
+            padding: 1rem;
+            border-radius: 5px;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+            display: none;
+            z-index: 100;
+        }
+
+        .threat-info.low { border-color: #00ff00; }
+        .threat-info.medium { border-color: #ffff00; }
+        .threat-info.high { border-color: #ff0000; }
+
+        .threat-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid;
+            padding-bottom: 0.3rem;
+        }
+
+        .threat-stats {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .map-legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 15, 0, 0.9);
+            border: 2px solid #00ff00;
+            padding: 1rem;
+            border-radius: 5px;
+            backdrop-filter: blur(10px);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+        }
+
+        .legend-color.low { background: #00ff00; }
+        .legend-color.medium { background: #ffff00; }
+        .legend-color.high { background: #ff0000; }
+
+        .cyber-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 15, 0, 0.95);
+            border-top: 2px solid #ff0000;
+            padding: 0.8rem 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .footer-nav {
+            display: flex;
+            gap: 1.2rem;
+            justify-content: center;
+        }
+
+        .cyber-button {
+            background: transparent;
+            color: #ff0000;
+            border: 2px solid #ff0000;
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .cyber-button:hover {
+            background: rgba(255, 0, 0, 0.1);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 0 0 10px;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 20px;
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrixCanvas" class="matrix-bg"></canvas>
+
+    <nav class="cyber-nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                GLOBAL THREAT MAP - خريطة التهديدات العالمية
+            </div>
+            <div style="color: #ff0000; font-size: 0.9rem;">
+                LIVE MONITORING - مراقبة حية
+            </div>
+        </div>
+    </nav>
+
+    <div class="map-container">
+        <div class="world-map" id="worldMap">
+            <!-- سيتم إضافة نقاط التهديد ديناميكياً -->
+        </div>
+        
+        <div class="map-legend">
+            <div style="color: #00ff00; margin-bottom: 0.8rem; font-weight: bold;">THREAT LEVELS - مستويات التهديد</div>
+            <div class="legend-item">
+                <span style="color: #00ff00;">LOW RISK - خطر منخفض</span>
+                <div class="legend-color low"></div>
+            </div>
+            <div class="legend-item">
+                <span style="color: #ffff00;">MEDIUM RISK - خطر متوسط</span>
+                <div class="legend-color medium"></div>
+            </div>
+            <div class="legend-item">
+                <span style="color: #ff0000;">HIGH RISK - خطر مرتفع</span>
+                <div class="legend-color high"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cyber-footer">
+        <div class="footer-nav">
+            <button class="cyber-button" onclick="window.location.href='index.html'">DASHBOARD - لوحة التحكم</button>
+            <button class="cyber-button" onclick="refreshThreatData()">REFRESH DATA - تحديث البيانات</button>
+            <button class="cyber-button" onclick="exportThreatReport()">EXPORT REPORT - تصدير تقرير</button>
+        </div>
+    </div>
+
+    <script>
+        // بيانات نقاط التهديد العالمية
+        const threatData = [
+            // الشرق الأوسط - نقاط حمراء عالية الخطورة
+            { id: 1, name: "سوريا", x: 58, y: 32, level: "high", risk: 85, 
+              details: "صراع مستمر، توترات إقليمية، تدخلات خارجية" },
+            { id: 2, name: "اليمن", x: 55, y: 42, level: "high", risk: 80,
+              details: "حرب أهلية، أزمة إنسانية، تهديدات أمنية" },
+            { id: 3, name: "فلسطين", x: 53, y: 30, level: "high", risk: 78,
+              details: "توترات مستمرة، صراع إسرائيلي فلسطيني" },
+            { id: 4, name: "العراق", x: 57, y: 30, level: "high", risk: 75,
+              details: "عدم استقرار سياسي، وجود ميليشيات" },
+            
+            // نقاط متوسطة الخطورة - صفراء
+            { id: 5, name: "أوكرانيا", x: 48, y: 22, level: "medium", risk: 65,
+              details: "توترات مع روسيا، تحديات اقتصادية" },
+            { id: 6, name: "أفغانستان", x: 62, y: 28, level: "medium", risk: 70,
+              details: "حكم طالبان، أزمات إنسانية" },
+            { id: 7, name: "ليبيا", x: 45, y: 32, level: "medium", risk: 68,
+              details: "انقسام سياسي، صراعات داخلية" },
+            { id: 8, name: "الصومال", x: 55, y: 45, level: "medium", risk: 72,
+              details: "تهديدات إرهابية، عدم استقرار" },
+            
+            // نقاط منخفضة الخطورة - خضراء
+            { id: 9, name: "السعودية", x: 56, y: 35, level: "low", risk: 40,
+              details: "استقرار نسبي، إصلاحات اقتصادية" },
+            { id: 10, name: "الإمارات", x: 58, y: 33, level: "low", risk: 30,
+              details: "استقرار سياسي، نمو اقتصادي" },
+            { id: 11, name: "مصر", x: 52, y: 30, level: "low", risk: 45,
+              details: "استقرار، تحديات اقتصادية" },
+            { id: 12, name: "الأردن", x: 53, y: 29, level: "low", risk: 35,
+              details: "استقرار، تحالفات إقليمية" }
+        ];
+
+        // التهيئة
+        document.addEventListener('DOMContentLoaded', function() {
+            startMatrixEffect();
+            renderThreatMap();
+            startThreatUpdates();
+        });
+
+        // تأثير المصفوفة
+        function startMatrixEffect() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const chars = "0123456789ABCDEF";
+            const charArray = chars.split("");
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = [];
+            
+            for(let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * canvas.height;
+            }
+            
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.font = fontSize + 'px monospace';
+                
+                for(let i = 0; i < drops.length; i++) {
+                    const text = charArray[Math.floor(Math.random() * charArray.length)];
+                    const x = i * fontSize;
+                    const y = drops[i] * fontSize;
+                    
+                    const opacity = Math.min(1, (canvas.height - y) / canvas.height);
+                    ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
+                    
+                    ctx.fillText(text, x, y);
+                    
+                    if(y > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    
+                    drops[i] += fontSize * 0.9;
+                }
+            }
+            
+            setInterval(draw, 50);
+        }
+
+        // عرض خريطة التهديدات
+        function renderThreatMap() {
+            const map = document.getElementById('worldMap');
+            map.innerHTML = '';
+            
+            threatData.forEach(threat => {
+                const threatPoint = document.createElement('div');
+                threatPoint.className = `threat-point ${threat.level}`;
+                threatPoint.style.left = `${threat.x}%`;
+                threatPoint.style.top = `${threat.y}%`;
+                threatPoint.setAttribute('data-id', threat.id);
+                
+                threatPoint.addEventListener('click', function() {
+                    showThreatInfo(threat);
+                });
+                
+                map.appendChild(threatPoint);
+            });
+        }
+
+        // عرض معلومات التهديد
+        function showThreatInfo(threat) {
+            // إزالة أي معلومات سابقة
+            const existingInfo = document.querySelector('.threat-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            
+            const threatInfo = document.createElement('div');
+            threatInfo.className = `threat-info ${threat.level}`;
+            threatInfo.style.left = `${threat.x + 5}%`;
+            threatInfo.style.top = `${threat.y}%`;
+            
+            threatInfo.innerHTML = `
+                <div class="threat-title" style="color: ${getThreatColor(threat.level)};">
+                    ${threat.name} - ${getThreatLevelText(threat.level)}
+                </div>
+                <div class="threat-stats">
+                    <div style="margin-bottom: 0.5rem;">
+                        <strong>RISK LEVEL - مستوى الخطورة:</strong> ${threat.risk}%
+                    </div>
+                    <div>
+                        <strong>THREAT DETAILS - تفاصيل التهديد:</strong><br>
+                        ${threat.details}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('worldMap').appendChild(threatInfo);
+            threatInfo.style.display = 'block';
+            
+            // إغلاق المعلومات عند النقر خارجها
+            setTimeout(() => {
+                document.addEventListener('click', function closeInfo(e) {
+                    if (!threatInfo.contains(e.target) && !e.target.classList.contains('threat-point')) {
+                        threatInfo.remove();
+                        document.removeEventListener('click', closeInfo);
+                    }
+                });
+            }, 100);
+        }
+
+        function getThreatColor(level) {
+            switch(level) {
+                case 'low': return '#00ff00';
+                case 'medium': return '#ffff00';
+                case 'high': return '#ff0000';
+                default: return '#ffffff';
+            }
+        }
+
+        function getThreatLevelText(level) {
+            switch(level) {
+                case 'low': return 'منخفض';
+                case 'medium': return 'متوسط';
+                case 'high': return 'مرتفع';
+                default: return 'غير معروف';
+            }
+        }
+
+        // تحديث بيانات التهديد
+        function startThreatUpdates() {
+            setInterval(updateThreatData, 10000);
+        }
+
+        function updateThreatData() {
+            // محاكاة تحديث بيانات التهديد
+            threatData.forEach(threat => {
+                threat.risk = Math.max(10, Math.min(95, threat.risk + (Math.random() * 10 - 5)));
+                
+                if (threat.risk >= 70) threat.level = 'high';
+                else if (threat.risk >= 40) threat.level = 'medium';
+                else threat.level = 'low';
+            });
+            
+            renderThreatMap();
+        }
+
+        // وظائف إضافية
+        function refreshThreatData() {
+            updateThreatData();
+            
+            // إظهار رسالة تحديث
+            const map = document.getElementById('worldMap');
+            const message = document.createElement('div');
+            message.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 15, 0, 0.9);
+                border: 2px solid #00ff00;
+                padding: 1rem 2rem;
+                color: #00ff00;
+                font-size: 1.2rem;
+                z-index: 1000;
+            `;
+            message.textContent = 'UPDATING THREAT DATA... - يتم تحديث بيانات التهديد';
+            map.appendChild(message);
+            
+            setTimeout(() => {
+                message.remove();
+            }, 1500);
+        }
+
+        function exportThreatReport() {
+            const report = {
+                timestamp: new Date().toLocaleString(),
+                totalThreats: threatData.length,
+                highRisk: threatData.filter(t => t.level === 'high').length,
+                mediumRisk: threatData.filter(t => t.level === 'medium').length,
+                lowRisk: threatData.filter(t => t.level === 'low').length,
+                threats: threatData
+            };
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "threat_report.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            
+            alert('THREAT REPORT EXPORTED - تم تصدير تقرير التهديدات');
+        }
+
+        // التعامل مع إعادة حجم الشاشة
+        window.addEventListener('resize', function() {
+            const canvas = document.getElementById('matrixCanvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
